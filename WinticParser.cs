@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 public class WinticLogParser
 {
@@ -9,15 +9,16 @@ public class WinticLogParser
         public String DataOraEmissioneRaw;
         public String TitoloFilm;
         public String OrarioProiezioneRaw;
+        public String DataProiezioneRaw;
         public float Prezzo;
         public bool Annullato;
         public DateTime DataOraProiezione
         {
             get
             {
-                int year = int.Parse(DataOraEmissioneRaw.Substring(0, 4));
-                int month = int.Parse(DataOraEmissioneRaw.Substring(4, 2));
-                int day = int.Parse(DataOraEmissioneRaw.Substring(6, 2));
+                int year = int.Parse(DataProiezioneRaw.Substring(0, 4));
+                int month = int.Parse(DataProiezioneRaw.Substring(4, 2));
+                int day = int.Parse(DataProiezioneRaw.Substring(6, 2));
                 int hour = int.Parse(OrarioProiezioneRaw.Substring(0, 2));
                 int minute = int.Parse(OrarioProiezioneRaw.Substring(2, 2));
                 DateTime result = new DateTime(year, month, day, hour, minute, 0);
@@ -33,6 +34,7 @@ public class WinticLogParser
             DataOraEmissioneRaw = RawData.Substring(64, 12);
             TitoloFilm = RawData.Substring(187, 40).Trim();
             OrarioProiezioneRaw = RawData.Substring(227, 4);
+            DataProiezioneRaw = RawData.Substring(177,8)
             Prezzo = float.Parse(RawData.Substring(261, 9)) / 100F;
         }
 
@@ -45,6 +47,7 @@ public class WinticLogParser
         public int Ridotti4;
         public int Ridotti5;
         public int Interi;
+        public int Prevendite;
     }
 	public WinticLogParser(String path)
 	{
@@ -74,6 +77,7 @@ public class WinticLogParser
         result.Ridotti4 = 0;
         result.Ridotti5 = 0;
         result.Interi = 0;
+        result.Prevendite = 0;
 
         for(int i = 0; i < WinticLog.Length; i++)
         {
@@ -93,6 +97,22 @@ public class WinticLogParser
                         break;
                     case "RX":
                         result.Ridotti4 += bigliettiVenduti;
+                        break;
+                    default:
+                        break;
+                }
+            } else if(WinticLog[i].DataOraProiezione > Proiezione) {
+                int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
+                switch (WinticLog[i].TipoBiglietto)
+                {
+                    case "IX":
+                        result.Prevendite += 7*bigliettiVenduti;
+                        break;
+                    case "RA":
+                        result.Prevendite += 5*bigliettiVenduti;
+                        break;
+                    case "RX":
+                        result.Prevendite += 4*bigliettiVenduti;
                         break;
                     default:
                         break;
