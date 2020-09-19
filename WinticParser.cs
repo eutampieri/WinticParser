@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 public class WinticLogParser
 {
@@ -26,6 +27,21 @@ public class WinticLogParser
             }
         }
 
+        public DateTime DataOraEmissione
+        {
+            get
+            {
+                int year = int.Parse(DataOraEmissioneRaw.Substring(0, 4));
+                int month = int.Parse(DataOraEmissioneRaw.Substring(4, 2));
+                int day = int.Parse(DataOraEmissioneRaw.Substring(6, 2));
+                int hour = int.Parse(DataOraEmissioneRaw.Substring(8, 2));
+                int minute = int.Parse(DataOraEmissioneRaw.Substring(10, 2));
+                DateTime result = new DateTime(year, month, day, hour, minute, 0);
+                return result;
+            }
+        }
+
+
         public WinticFilmData(String RawData)
         {
             Annullato = RawData[55] == 'A';
@@ -34,13 +50,13 @@ public class WinticLogParser
             DataOraEmissioneRaw = RawData.Substring(64, 12);
             TitoloFilm = RawData.Substring(187, 40).Trim();
             OrarioProiezioneRaw = RawData.Substring(227, 4);
-            DataProiezioneRaw = RawData.Substring(177,8)
+            DataProiezioneRaw = RawData.Substring(177, 8);
             Prezzo = float.Parse(RawData.Substring(261, 9)) / 100F;
         }
 
     }
     private readonly String WinticPath;
-    private WinticFilmData[] WinticLog;
+    private List<WinticFilmData> WinticLog;
     public struct WinticStats
     {
         public int Omaggi;
@@ -53,24 +69,32 @@ public class WinticLogParser
 	{
         WinticPath = path;
 	}
-    private void LoadFile()
+    private void LoadFile(DateTime date)
     {
-        DateTime now = DateTime.Now;
-        String filename = WinticPath + "\\logdir\\LOG_" + now.Year.ToString() +
-            "_" + now.Month.ToString().PadLeft(2, '0') +
-            "_" + now.Day.ToString().PadLeft(2, '0') + ".TXT";
-        String file_content = System.IO.File.ReadAllText(@filename).Replace("\r", "");
-        String[] file_rows = file_content.Split('\n');
-        System.Collections.Generic.List<WinticFilmData> parsed = new System.Collections.Generic.List<WinticFilmData>();
+        String filename = WinticPath + "\\logdir\\LOG_" + date.Year.ToString() +
+            "_" + date.Month.ToString().PadLeft(2, '0') +
+            "_" + date.Day.ToString().PadLeft(2, '0') + ".TXT";
+        String[] file_rows;
+        if (System.IO.File.Exists(filename)) {
+            String file_content = System.IO.File.ReadAllText(@filename).Replace("\r", "");
+            file_rows = file_content.Split('\n');
+        } else
+        {
+            file_rows = new string[] { };
+        }
+        List<WinticFilmData> parsed = new List<WinticFilmData>();
         for(int i = 0; i < file_rows.Length - 1; i++)
         {
             parsed.Add(new WinticFilmData(file_rows[i]));
         }
-        WinticLog = parsed.ToArray();
+        WinticLog.AddRange(parsed);
     }
     public WinticStats GetStats(DateTime Proiezione)
     {
-        LoadFile();
+        for(int i = 0; i <= 7; i++)
+        {
+            LoadFile(DateTime.Now.AddDays(-1 * i));
+        }
 
         WinticStats result;
         result.Omaggi = 0;
@@ -79,7 +103,7 @@ public class WinticLogParser
         result.Interi = 0;
         result.Prevendite = 0;
 
-        for(int i = 0; i < WinticLog.Length; i++)
+        for(int i = 0; i < WinticLog.Count; i++)
         {
             if(WinticLog[i].DataOraProiezione == Proiezione)
             {
@@ -101,7 +125,7 @@ public class WinticLogParser
                     default:
                         break;
                 }
-            } else if(WinticLog[i].DataOraProiezione > Proiezione) {
+            } else if(WinticLog[i].DataOraProiezione > Proiezione && WinticLog[i].DataOraEmissione - Proiezione < TimeSpan.FromMinutes(40)) {
                 int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
                 switch (WinticLog[i].TipoBiglietto)
                 {
