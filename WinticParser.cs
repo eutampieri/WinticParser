@@ -66,26 +66,28 @@ public class WinticLogParser
         public int Prevendite;
         public int IncassiPrecedenti;
     }
-	public WinticLogParser(String path)
-	{
+    public WinticLogParser(String path)
+    {
         WinticPath = path;
         WinticLog = new List<WinticFilmData>();
-	}
+    }
     private void LoadFile(DateTime date)
     {
         String filename = WinticPath + "\\logdir\\LOG_" + date.Year.ToString() +
             "_" + date.Month.ToString().PadLeft(2, '0') +
             "_" + date.Day.ToString().PadLeft(2, '0') + ".TXT";
         String[] file_rows;
-        if (System.IO.File.Exists(filename)) {
+        if (System.IO.File.Exists(filename))
+        {
             String file_content = System.IO.File.ReadAllText(@filename).Replace("\r", "");
             file_rows = file_content.Split('\n');
-        } else
+        }
+        else
         {
             file_rows = new string[] { };
         }
         List<WinticFilmData> parsed = new List<WinticFilmData>();
-        for(int i = 0; i < file_rows.Length - 1; i++)
+        for (int i = 0; i < file_rows.Length - 1; i++)
         {
             parsed.Add(new WinticFilmData(file_rows[i]));
         }
@@ -93,7 +95,7 @@ public class WinticLogParser
     }
     public WinticStats GetStats(DateTime Proiezione)
     {
-        for(int i = 0; i <= 7; i++)
+        for (int i = 0; i <= 7; i++)
         {
             LoadFile(DateTime.Now.AddDays(-1 * i));
         }
@@ -106,28 +108,28 @@ public class WinticLogParser
         result.Prevendite = 0;
         result.IncassiPrecedenti = 0;
 
-        for(int i = 0; i < WinticLog.Count; i++)
+        for (int i = 0; i < WinticLog.Count; i++)
         {
-            if(WinticLog[i].DataOraProiezione == Proiezione)
+            if (WinticLog[i].DataOraProiezione == Proiezione)
             {
                 int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
-                    switch (WinticLog[i].TipoBiglietto)
-                    {
-                        case "OX":
-                            result.Omaggi += bigliettiVenduti;
-                            break;
-                        case "IX":
-                            result.Interi += bigliettiVenduti;
-                            break;
-                        case "RA":
-                            result.Ridotti5 += bigliettiVenduti;
-                            break;
-                        case "RX":
-                            result.Ridotti4 += bigliettiVenduti;
-                            break;
-                        default:
-                            break;
-                    }
+                switch (WinticLog[i].TipoBiglietto)
+                {
+                    case "OX":
+                        result.Omaggi += bigliettiVenduti;
+                        break;
+                    case "IX":
+                        result.Interi += bigliettiVenduti;
+                        break;
+                    case "RA":
+                        result.Ridotti5 += bigliettiVenduti;
+                        break;
+                    case "RX":
+                        result.Ridotti4 += bigliettiVenduti;
+                        break;
+                    default:
+                        break;
+                }
                 if (Proiezione - WinticLog[i].DataOraEmissione >= TimeSpan.FromMinutes(40))
                 {
                     switch (WinticLog[i].TipoBiglietto)
@@ -145,18 +147,20 @@ public class WinticLogParser
                             break;
                     }
                 }
-            } else if(WinticLog[i].DataOraProiezione > Proiezione && WinticLog[i].DataOraEmissione - Proiezione < TimeSpan.FromMinutes(40)) {
+            }
+            else if (WinticLog[i].DataOraProiezione > Proiezione && Proiezione - WinticLog[i].DataOraEmissione < TimeSpan.FromMinutes(40))
+            {
                 int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
                 switch (WinticLog[i].TipoBiglietto)
                 {
                     case "IX":
-                        result.Prevendite += 7*bigliettiVenduti;
+                        result.Prevendite += 7 * bigliettiVenduti;
                         break;
                     case "RA":
-                        result.Prevendite += 5*bigliettiVenduti;
+                        result.Prevendite += 5 * bigliettiVenduti;
                         break;
                     case "RX":
-                        result.Prevendite += 4*bigliettiVenduti;
+                        result.Prevendite += 4 * bigliettiVenduti;
                         break;
                     default:
                         break;
