@@ -130,7 +130,7 @@ public class WinticLogParser
                     default:
                         break;
                 }
-                if (Proiezione - WinticLog[i].DataOraEmissione >= TimeSpan.FromMinutes(40))
+                if (Proiezione - WinticLog[i].DataOraEmissione >= TimeSpan.FromMinutes(60))
                 {
                     switch (WinticLog[i].TipoBiglietto)
                     {
@@ -148,7 +148,7 @@ public class WinticLogParser
                     }
                 }
             }
-            else if (WinticLog[i].DataOraProiezione > Proiezione && Proiezione - WinticLog[i].DataOraEmissione < TimeSpan.FromMinutes(40))
+            else if (WinticLog[i].DataOraProiezione > Proiezione && Proiezione - WinticLog[i].DataOraEmissione < TimeSpan.FromMinutes(60))
             {
                 int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
                 switch (WinticLog[i].TipoBiglietto)
