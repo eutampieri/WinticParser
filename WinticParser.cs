@@ -47,7 +47,7 @@ namespace WinticParser
 
             public WinticFilmData(String RawData)
             {
-                string[] RawSeat = RawData.Substring(47, 6).Trim().Split("/");
+                string[] RawSeat = RawData.Substring(47, 6).Trim().Split('/');
                 Annullato = RawData[55] == 'A';
                 PartitaIVA = RawData.Substring(0, 11);
                 TipoBiglietto = RawData.Substring(53, 2);
