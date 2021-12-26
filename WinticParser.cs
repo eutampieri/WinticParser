@@ -25,7 +25,7 @@ namespace WinticParser
                     int day = int.Parse(DataProiezioneRaw.Substring(6, 2));
                     int hour = int.Parse(OrarioProiezioneRaw.Substring(0, 2));
                     int minute = int.Parse(OrarioProiezioneRaw.Substring(2, 2));
-                    DateTime result = new DateTime(year, month, day, hour, minute, 0);
+                    DateTime result = new(year, month, day, hour, minute, 0);
                     return result;
                 }
             }
@@ -39,7 +39,7 @@ namespace WinticParser
                     int day = int.Parse(DataOraEmissioneRaw.Substring(6, 2));
                     int hour = int.Parse(DataOraEmissioneRaw.Substring(8, 2));
                     int minute = int.Parse(DataOraEmissioneRaw.Substring(10, 2));
-                    DateTime result = new DateTime(year, month, day, hour, minute, 0);
+                    DateTime result = new(year, month, day, hour, minute, 0);
                     return result;
                 }
             }
@@ -56,14 +56,16 @@ namespace WinticParser
                 OrarioProiezioneRaw = RawData.Substring(227, 4);
                 DataProiezioneRaw = RawData.Substring(177, 8);
                 Prezzo = float.Parse(RawData.Substring(261, 9)) / 100F;
-                Posto = new Seat();
-                Posto.Row = RawSeat[0];
-                Posto.SeatNumber = int.Parse(RawSeat[1]);
+                Posto = new Seat
+                {
+                    Row = RawSeat[0],
+                    SeatNumber = int.Parse(RawSeat[1])
+                };
             }
 
         }
         private readonly String WinticPath;
-        private List<WinticFilmData> WinticLog;
+        private readonly List<WinticFilmData> WinticLog;
         public struct Seat
         {
             public String Row;
@@ -77,6 +79,18 @@ namespace WinticParser
             public ISet<Seat> Interi;
             public float Prevendite;
             public float IncassiPrecedenti;
+            public ISet<Seat> PostiVenduti
+            {
+                get
+                {
+                    HashSet<Seat> result = new();
+                    result.UnionWith(Omaggi);
+                    result.UnionWith(Interi);
+                    result.UnionWith(Ridotti5);
+                    result.UnionWith(Ridotti4);
+                    return result;
+                }
+            }
         }
         public WinticLogParser(String path)
         {
@@ -96,9 +110,9 @@ namespace WinticParser
             }
             else
             {
-                file_rows = new string[] { };
+                file_rows = Array.Empty<string>();
             }
-            List<WinticFilmData> parsed = new List<WinticFilmData>();
+            List<WinticFilmData> parsed = new();
             for (int i = 0; i < file_rows.Length - 1; i++)
             {
                 parsed.Add(new WinticFilmData(file_rows[i]));
