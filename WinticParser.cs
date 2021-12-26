@@ -13,6 +13,7 @@ namespace WinticParser
             public String TitoloFilm;
             public String OrarioProiezioneRaw;
             public String DataProiezioneRaw;
+            public Seat Posto;
             public float Prezzo;
             public bool Annullato;
             public DateTime DataOraProiezione
@@ -46,6 +47,7 @@ namespace WinticParser
 
             public WinticFilmData(String RawData)
             {
+                string[] RawSeat = RawData.Substring(47, 6).Trim().Split("/");
                 Annullato = RawData[55] == 'A';
                 PartitaIVA = RawData.Substring(0, 11);
                 TipoBiglietto = RawData.Substring(53, 2);
@@ -54,19 +56,27 @@ namespace WinticParser
                 OrarioProiezioneRaw = RawData.Substring(227, 4);
                 DataProiezioneRaw = RawData.Substring(177, 8);
                 Prezzo = float.Parse(RawData.Substring(261, 9)) / 100F;
+                Posto = new Seat();
+                Posto.Row = RawSeat[0];
+                Posto.SeatNumber = int.Parse(RawSeat[1]);
             }
 
         }
         private readonly String WinticPath;
         private List<WinticFilmData> WinticLog;
+        public struct Seat
+        {
+            public String Row;
+            public int SeatNumber;
+        }
         public struct WinticStats
         {
-            public int Omaggi;
-            public int Ridotti4;
-            public int Ridotti5;
-            public int Interi;
-            public int Prevendite;
-            public int IncassiPrecedenti;
+            public ISet<Seat> Omaggi;
+            public ISet<Seat> Ridotti4;
+            public ISet<Seat> Ridotti5;
+            public ISet<Seat> Interi;
+            public float Prevendite;
+            public float IncassiPrecedenti;
         }
         public WinticLogParser(String path)
         {
@@ -103,10 +113,10 @@ namespace WinticParser
             }
 
             WinticStats result;
-            result.Omaggi = 0;
-            result.Ridotti4 = 0;
-            result.Ridotti5 = 0;
-            result.Interi = 0;
+            result.Omaggi = new HashSet<Seat>();
+            result.Ridotti4 = new HashSet<Seat>();
+            result.Ridotti5 = new HashSet<Seat>();
+            result.Interi = new HashSet<Seat>();
             result.Prevendite = 0;
             result.IncassiPrecedenti = 0;
 
@@ -114,59 +124,62 @@ namespace WinticParser
             {
                 if (WinticLog[i].DataOraProiezione == Proiezione)
                 {
-                    int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
                     switch (WinticLog[i].TipoBiglietto)
                     {
                         case "OX":
-                            result.Omaggi += bigliettiVenduti;
+                            if(WinticLog[i].Annullato)
+                            {
+                                result.Omaggi.Remove(WinticLog[i].Posto);
+                            } else
+                            {
+                                result.Omaggi.Add(WinticLog[i].Posto);
+                            }
                             break;
                         case "IX":
-                            result.Interi += bigliettiVenduti;
+                            if (WinticLog[i].Annullato)
+                            {
+                                result.Interi.Remove(WinticLog[i].Posto);
+                            }
+                            else
+                            {
+                                result.Interi.Add(WinticLog[i].Posto);
+                            }
                             break;
                         case "RA":
-                            result.Ridotti5 += bigliettiVenduti;
+                            if (WinticLog[i].Annullato)
+                            {
+                                result.Ridotti5.Remove(WinticLog[i].Posto);
+                            }
+                            else
+                            {
+                                result.Ridotti5.Add(WinticLog[i].Posto);
+                            }
+
                             break;
                         case "RX":
-                            result.Ridotti4 += bigliettiVenduti;
+                            if (WinticLog[i].Annullato)
+                            {
+                                result.Ridotti4.Remove(WinticLog[i].Posto);
+                            }
+                            else
+                            {
+                                result.Ridotti4.Add(WinticLog[i].Posto);
+                            }
+
                             break;
                         default:
                             break;
                     }
                     if (Proiezione - WinticLog[i].DataOraEmissione >= TimeSpan.FromMinutes(60))
                     {
-                        switch (WinticLog[i].TipoBiglietto)
-                        {
-                            case "IX":
-                                result.IncassiPrecedenti += 7 * bigliettiVenduti;
-                                break;
-                            case "RA":
-                                result.IncassiPrecedenti += 5 * bigliettiVenduti;
-                                break;
-                            case "RX":
-                                result.IncassiPrecedenti += 4 * bigliettiVenduti;
-                                break;
-                            default:
-                                break;
-                        }
+                        int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
+                        result.IncassiPrecedenti += WinticLog[i].Prezzo * bigliettiVenduti;
                     }
                 }
                 else if (WinticLog[i].DataOraProiezione > Proiezione && Proiezione - WinticLog[i].DataOraEmissione < TimeSpan.FromMinutes(60))
                 {
                     int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
-                    switch (WinticLog[i].TipoBiglietto)
-                    {
-                        case "IX":
-                            result.Prevendite += 7 * bigliettiVenduti;
-                            break;
-                        case "RA":
-                            result.Prevendite += 5 * bigliettiVenduti;
-                            break;
-                        case "RX":
-                            result.Prevendite += 4 * bigliettiVenduti;
-                            break;
-                        default:
-                            break;
-                    }
+                    result.IncassiPrecedenti += WinticLog[i].Prezzo * bigliettiVenduti;
                 }
             }
 
