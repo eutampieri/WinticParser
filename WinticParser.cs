@@ -1,3 +1,4 @@
+using Optional;
 using System;
 using System.Collections.Generic;
 
@@ -13,7 +14,7 @@ namespace WinticParser
             public String TitoloFilm;
             public String OrarioProiezioneRaw;
             public String DataProiezioneRaw;
-            public Seat Posto;
+            public Option<Seat> Posto;
             public float Prezzo;
             public bool Annullato;
             public DateTime DataOraProiezione
@@ -56,11 +57,18 @@ namespace WinticParser
                 OrarioProiezioneRaw = RawData.Substring(227, 4);
                 DataProiezioneRaw = RawData.Substring(177, 8);
                 Prezzo = float.Parse(RawData.Substring(261, 9)) / 100F;
-                Posto = new Seat
+                if (RawSeat.Length != 2)
                 {
-                    Row = RawSeat[0],
-                    SeatNumber = int.Parse(RawSeat[1])
-                };
+                    Posto = Option.None<Seat>();
+                }
+                else
+                {
+                    Posto = new Seat
+                    {
+                        Row = RawSeat[0],
+                        SeatNumber = int.Parse(RawSeat[1])
+                    }.Some();
+                }
             }
 
         }
@@ -143,41 +151,41 @@ namespace WinticParser
                         case "OX":
                             if(WinticLog[i].Annullato)
                             {
-                                result.Omaggi.Remove(WinticLog[i].Posto);
+                                result.Omaggi.Remove(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber=0}));
                             } else
                             {
-                                result.Omaggi.Add(WinticLog[i].Posto);
+                                result.Omaggi.Add(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
                             }
                             break;
                         case "IX":
                             if (WinticLog[i].Annullato)
                             {
-                                result.Interi.Remove(WinticLog[i].Posto);
+                                result.Interi.Remove(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
                             }
                             else
                             {
-                                result.Interi.Add(WinticLog[i].Posto);
+                                result.Interi.Add(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
                             }
                             break;
                         case "RA":
                             if (WinticLog[i].Annullato)
                             {
-                                result.Ridotti5.Remove(WinticLog[i].Posto);
+                                result.Ridotti5.Remove(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
                             }
                             else
                             {
-                                result.Ridotti5.Add(WinticLog[i].Posto);
+                                result.Ridotti5.Add(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
                             }
 
                             break;
                         case "RX":
                             if (WinticLog[i].Annullato)
                             {
-                                result.Ridotti4.Remove(WinticLog[i].Posto);
+                                result.Ridotti4.Remove(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
                             }
                             else
                             {
-                                result.Ridotti4.Add(WinticLog[i].Posto);
+                                result.Ridotti4.Add(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
                             }
 
                             break;
