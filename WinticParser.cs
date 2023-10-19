@@ -1,6 +1,7 @@
 using Optional;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace WinticParser
 {
@@ -79,6 +80,17 @@ namespace WinticParser
             public String Row;
             public int SeatNumber;
         }
+        public struct PriceStatsRow
+        {
+            public int Price;
+            public uint Quantity;
+
+            public PriceStatsRow(int price, uint quantity) : this()
+            {
+                this.Price = price;
+                this.Quantity = quantity;
+            }
+        }
         public struct WinticStats
         {
             public ISet<Seat> Omaggi;
@@ -99,6 +111,7 @@ namespace WinticParser
                     return result;
                 }
             }
+            public IList<PriceStatsRow> PriceStats;
         }
         public WinticLogParser(String path)
         {
@@ -142,10 +155,19 @@ namespace WinticParser
             result.Prevendite = 0;
             result.IncassiPrecedenti = 0;
 
+            IDictionary<int, uint> priceStats = new Dictionary<int, uint>();
+
             for (int i = 0; i < WinticLog.Count; i++)
             {
                 if (WinticLog[i].DataOraProiezione == Proiezione)
                 {
+                    int price = (int)(WinticLog[i].Prezzo * 100);
+                    if (!priceStats.ContainsKey(price))
+                    {
+                        priceStats.Add(price, 0);
+                    }
+                    priceStats[price]++;
+
                     switch (WinticLog[i].TipoBiglietto)
                     {
                         case "OX":
@@ -204,6 +226,8 @@ namespace WinticParser
                     result.IncassiPrecedenti += WinticLog[i].Prezzo * bigliettiVenduti;
                 }
             }
+
+            result.PriceStats = priceStats.Select(x => new PriceStatsRow(x.Key, x.Value)).ToList();
 
             return result;
         }
