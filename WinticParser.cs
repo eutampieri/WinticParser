@@ -93,24 +93,12 @@ namespace WinticParser
         }
         public struct WinticStats
         {
-            public ISet<Seat> Omaggi;
-            public ISet<Seat> Ridotti4;
-            public ISet<Seat> Ridotti5;
-            public ISet<Seat> Interi;
+            public int Omaggi;
+            public int Ridotti4;
+            public int Ridotti5;
+            public int Interi;
             public float Prevendite;
             public float IncassiPrecedenti;
-            public ISet<Seat> PostiVenduti
-            {
-                get
-                {
-                    HashSet<Seat> result = new();
-                    result.UnionWith(Omaggi);
-                    result.UnionWith(Interi);
-                    result.UnionWith(Ridotti5);
-                    result.UnionWith(Ridotti4);
-                    return result;
-                }
-            }
             public IList<PriceStatsRow> PriceStats;
         }
         public WinticLogParser(String path)
@@ -148,12 +136,12 @@ namespace WinticParser
             }
 
             WinticStats result;
-            result.Omaggi = new HashSet<Seat>();
-            result.Ridotti4 = new HashSet<Seat>();
-            result.Ridotti5 = new HashSet<Seat>();
-            result.Interi = new HashSet<Seat>();
-            result.Prevendite = 0;
-            result.IncassiPrecedenti = 0;
+            result.Omaggi = 0;
+            result.Ridotti4 = 0;
+            result.Ridotti5 = 0;
+            result.Interi = 0;
+            result.Prevendite = 0F;
+            result.IncassiPrecedenti = 0F;
 
             IDictionary<int, uint> priceStats = new Dictionary<int, uint>();
 
@@ -166,48 +154,53 @@ namespace WinticParser
                     {
                         priceStats.Add(price, 0);
                     }
-                    priceStats[price]++;
+		    if(WinticLog[i].Annullato)
+                    {
+                        priceStats[price]--;
+                    } else {
+                        priceStats[price]++;
+                    }
 
                     switch (WinticLog[i].TipoBiglietto)
                     {
                         case "OX":
                             if(WinticLog[i].Annullato)
                             {
-                                result.Omaggi.Remove(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber=0}));
+                                result.Omaggi--;
                             } else
                             {
-                                result.Omaggi.Add(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
+                                result.Omaggi++;
                             }
                             break;
                         case "IX":
                             if (WinticLog[i].Annullato)
                             {
-                                result.Interi.Remove(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
+                                result.Interi--;
                             }
                             else
                             {
-                                result.Interi.Add(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
+                                result.Interi++;
                             }
                             break;
                         case "RA":
                             if (WinticLog[i].Annullato)
                             {
-                                result.Ridotti5.Remove(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
+                                result.Ridotti5--;
                             }
                             else
                             {
-                                result.Ridotti5.Add(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
+                                result.Ridotti5++;
                             }
 
                             break;
                         case "RX":
                             if (WinticLog[i].Annullato)
                             {
-                                result.Ridotti4.Remove(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
+                                result.Ridotti4--;
                             }
                             else
                             {
-                                result.Ridotti4.Add(WinticLog[i].Posto.ValueOr(new Seat { Row = WinticLog[i].TipoBiglietto, SeatNumber = 0 }));
+                                result.Ridotti4++;
                             }
 
                             break;
