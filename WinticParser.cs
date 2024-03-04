@@ -93,10 +93,6 @@ namespace WinticParser
         }
         public struct WinticStats
         {
-            public int Omaggi;
-            public int Ridotti4;
-            public int Ridotti5;
-            public int Interi;
             public float Prevendite;
             public float IncassiPrecedenti;
             public IList<PriceStatsRow> PriceStats;
@@ -136,10 +132,6 @@ namespace WinticParser
             }
 
             WinticStats result;
-            result.Omaggi = 0;
-            result.Ridotti4 = 0;
-            result.Ridotti5 = 0;
-            result.Interi = 0;
             result.Prevendite = 0F;
             result.IncassiPrecedenti = 0F;
 
@@ -154,59 +146,13 @@ namespace WinticParser
                     {
                         priceStats.Add(price, 0);
                     }
-		    if(WinticLog[i].Annullato)
+		            if(WinticLog[i].Annullato)
                     {
                         priceStats[price]--;
                     } else {
                         priceStats[price]++;
                     }
-
-                    switch (WinticLog[i].TipoBiglietto)
-                    {
-                        case "OX":
-                            if(WinticLog[i].Annullato)
-                            {
-                                result.Omaggi--;
-                            } else
-                            {
-                                result.Omaggi++;
-                            }
-                            break;
-                        case "IX":
-                            if (WinticLog[i].Annullato)
-                            {
-                                result.Interi--;
-                            }
-                            else
-                            {
-                                result.Interi++;
-                            }
-                            break;
-                        case "RA":
-                            if (WinticLog[i].Annullato)
-                            {
-                                result.Ridotti5--;
-                            }
-                            else
-                            {
-                                result.Ridotti5++;
-                            }
-
-                            break;
-                        case "RX":
-                            if (WinticLog[i].Annullato)
-                            {
-                                result.Ridotti4--;
-                            }
-                            else
-                            {
-                                result.Ridotti4++;
-                            }
-
-                            break;
-                        default:
-                            break;
-                    }
+                    
                     if (Proiezione - WinticLog[i].DataOraEmissione >= TimeSpan.FromMinutes(60))
                     {
                         int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
