@@ -164,11 +164,6 @@ namespace WinticParser
                     int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
                     result.IncassiPrecedenti += WinticLog[i].Prezzo * bigliettiVenduti;
                 }
-                else if (WinticLog[i].DataOraProiezione == Proiezione && Proiezione - WinticLog[i].DataOraEmissione >= TimeSpan.FromMinutes(60))
-                {
-                    int bigliettiVenduti = WinticLog[i].Annullato ? -1 : 1;
-                    result.Prevendite += WinticLog[i].Prezzo * bigliettiVenduti;
-                }
             }
 
             result.PriceStats = priceStats.Select(x => new PriceStatsRow(x.Key, x.Value)).ToList();
